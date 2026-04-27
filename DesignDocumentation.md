@@ -1,34 +1,34 @@
 # Prism Language - Design & Implementation Documentation
 
 ## 1. Introduction
-Prism is a functional-imperative language designed for the CS252 final project. It implements three major features beyond a basic WHILE-language: user-defined functions, recursive list structures, and robust pattern matching.
+Prism is a functional-imperative language designed for the CS252 final project. It has three main features beyond a basic language: user-defined functions, recursive list structures, and pattern matching.
 
-The name **Prism** reflects the language's core philosophy: just as a prism deconstructs white light into its component colors, the Prism language deconstructs complex data structures into their fundamental parts through elegant pattern matching.
+The name **Prism** comes from the language's main idea: just as a prism breaks light into colors, the Prism language uses pattern matching to break complex data down into basic parts.
 
 ## 2. Motivation
-The primary motivation behind Prism is to provide a tool for **"Declarative Deconstruction."** In traditional imperative languages, processing recursive data like lists requires complex loops, index management, and nested conditionals. Prism shifts this burden from the programmer to the language.
+The main reason for Prism is to provide a tool for **"Declarative Deconstruction."** In other languages, processing recursive data like lists requires complex loops, managing indexes, and nested conditionals. Prism handles this for the programmer.
 
 ### Key Use Cases:
-1.  **Rule Engines**: Evaluating complex business or game logic by "matching" shapes of data.
-2.  **Symbolic Manipulation**: Ideal for building compilers or mathematical simplifiers where data is often tree-like or recursive.
-3.  **Data Transformation**: Cleaning and reshaping complex JSON-like list structures with minimal code.
-4.  **Configuration with Logic**: Modern infrastructure tools require "smart" configurations that are more than static text; Prism allows for dynamic setting generation through its functional core.
+1.  **Rule Engines**: Writing business or game logic by matching data shapes.
+2.  **Symbolic Manipulation**: Good for building compilers or math tools where data is tree-like.
+3.  **Data Transformation**: Fixing and changing complex list structures with less code.
+4.  **Configuration with Logic**: Modern tools need smart configurations; Prism lets you generate settings dynamically.
 
 ### 2.1 Lexical Scoping
-**Decision:** Function calls use a dedicated local environment.
-**Reasoning:** To ensure sound modularity, functions should not have side effects on the global variable space unless explicitly intended. By isolating the `variables` map during function evaluation, we prevent variable name collisions and implement proper scoping rules found in modern languages.
+**Decision:** Function calls use their own local environment.
+**Reasoning:** To keep things separate, functions should not change global variables unless meant to. By keeping the `variables` map separate during function reading, we avoid name mix-ups and follow standard scoping rules found in modern languages.
 
 ### 2.2 First-Class Pattern Matching
-**Decision:** `match` is an expression, not just a way to define functions.
-**Reasoning:** While many languages (like Haskell) use pattern matching in function definitions, making `match` an expression allows for more flexible code. A developer can perform case analysis in the middle of a complex calculation without needing to break it out into a separate function.
+**Decision:** `match` is an expression, not just for making functions.
+**Reasoning:** While many languages use pattern matching in function setups, making `match` an expression lets you write more flexible code. You can do different checks in the middle of a big calculation without needing to make a whole new function.
 
 ### 2.3 Recursive List Structure
-**Decision:** Lists are implemented as a native `ListVal` in the interpreter.
-**Reasoning:** This allows for $O(1)$ `cons` operations and easy recursive deconstruction. Using a native Haskell list as the backing store in the `Value` type ensures that the interpreter remains performant and easy to reason about.
+**Decision:** Lists are built-in as `ListVal` in the interpreter.
+**Reasoning:** This keeps `cons` operations fast ($O(1)$) and makes breaking lists down easy. By using a standard Haskell list inside the `Value` type, the interpreter stays fast and simple to understand.
 
 ### 2.4 Error Handling with ExceptT
-**Decision:** Using `ExceptT String (State InterpreterState)` for evaluation.
-**Reasoning:** Standard interpreters often crash on runtime errors (like division by zero or unbound variables). By using a Monad Transformer stack, Prism provides descriptive error messages without crashing the host Haskell environment, which is a key requirement for a "production-ready" academic project.
+**Decision:** Used `ExceptT String (State InterpreterState)` to run code.
+**Reasoning:** Basic interpreters often crash when there is an error (like division by zero or missing variables). By using a Monad Transformer stack, Prism gives good error messages without crashing the host Haskell environment, which makes it safe to use.
 
 ## 3. Clean Code Principles (Robert C. Martin)
 

@@ -1,7 +1,7 @@
 # CS 252 Final Project: Prism Language
 
 ## Overview
-Prism is a custom programming language implemented in Haskell. It combines a small imperative core with powerful functional features, specifically designed for **"Declarative Deconstruction"**—the elegant breakdown of complex data structures. It is optimized for rule engines, symbolic manipulation, data transformation, and dynamic configuration logic.
+Prism is a custom programming language implemented in Haskell. It combines a small imperative core with powerful functional features. It is designed for **"Declarative Deconstruction"**, which is the easy breakdown of complex data structures. It works well for rule engines, symbolic manipulation, data transformation, and dynamic configuration logic.
 
 ## Project Structure
 - **AST.hs**: Abstract Syntax Tree and Value definitions.
