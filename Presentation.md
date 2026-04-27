@@ -1,55 +1,78 @@
-# Prism Language - Project Presentation
-**By: Krishna Mula, Kushagra Bainsla, Tejas Chakkarwar**
+# Prism: Declarative Deconstruction
+**Team:** Krishna Mula, Kushagra Bainsla, Tejas Chakkarwar
+
+*(Target duration: 5 minutes)*
 
 ---
 
-## 1. Project Goal: "Declarative Deconstruction"
-- Build a language that makes it easy to look *inside* complex data.
-- Go beyond basic math to support reading lists and advanced control flow.
+## 1. The Motivation: Why Prism?
+**Goal:** Make breaking down complex data structures effortless.
+- **Problem:** Imperative data extraction is verbose and error-prone.
+- **Solution:** A hybrid PL combining tiny imperative core with powerful functional features.
+- **Use Cases:** Rule engines, symbolic math, and configuration logic.
+
+*(Speaker Note: Emphasize that we wanted the safety of functional pattern matching but the familiarity of imperative assignments. Keep this under 45 seconds.)*
 
 ---
 
-## 2. Key Features
-- **User-Defined Functions**: Recursive calls with local scope.
-- **Recursive Lists**: Support for `cons`, empty lists, and list literals.
-- **Pattern Matching**: Strong `match` expression for easy list processing.
-- **Static Analysis**: Check for missing variables before running (Stretch Goal).
+## 2. Interesting PL Ideas
+- **Recursive Lists & `cons`:** First-class support for `[]` and `h:t`.
+- **Deep Pattern Matching:** The `match` expression drives the language.
+- **Lexical Scoping:** Variables stay safe inside recursive function calls.
+- **Static Analysis:** (Stretch Goal) Catches missing variables before execution.
+
+*(Speaker Note: Highlight that pattern matching isn't just a switch statement, it binds variables recursively. 45 seconds.)*
 
 ---
 
-## 3. Language Syntax (Demo)
+## 3. Prism in Action (Example)
 ```haskell
-fun sum(xs) =
+// Advanced Pattern Matching & Recursion
+fun filter_even(xs) =
   match xs with
-  | [] -> 0
-  | h:t -> h + sum(t)
+  | [] -> []
+  | h:t -> 
+      if (h / 2) * 2 == h 
+      then h : filter_even(t) 
+      else filter_even(t)
 
-x = [1, 2, 3, 4];
-sum(x) // Result: 10
+my_list = [1, 2, 3, 4, 5, 6];
+evens = filter_even(my_list);
 ```
+*(Speaker Note: Walk the audience through the `match` block. Show how cleanly `h:t` pulls the list apart. 1 minute.)*
 
 ---
 
-## 4. Implementation Details
-- **Frontend**: Parsec (Parser Combinators).
-- **Backend**: `State` and `ExceptT` monads for easy state and error handling.
-- **Scoping**: Keep local variables safe during function calls.
+## 4. Under the Hood (Implementation)
+- **Frontend**
+  - Built with **Parsec** (Parser Combinators).
+- **Backend**
+  - **State Monad**: Manages the environment (variable bindings).
+  - **ExceptT Monad**: Graceful, typed error handling.
+- **Clean Design**
+  - Strongly separated AST, Parser, and Interpreter.
+
+*(Speaker Note: Mention why Monads were crucial for handling errors like "unbound variable" without crashing Haskell. 1 minute.)*
 
 ---
 
-## 5. Clean Code & Design Choices
-- **Small Functions**: Every step uses specific helpers.
-- **Descriptive Errors**: Clear "Static Analysis Error", "Runtime Error", and "Parse Error".
-- **Sound Reasoning**: Why use a standard Haskell list? Why make `match` an expression?
+## 5. Successes & Challenges
+**Success:** 
+- Graceful runtime errors instead of crashes.
+- Achieved our Stretch Goal (Static Analysis).
+
+**Challenge & Solution:** 
+- *Challenge:* Handling infinite loops in recursion.
+- *Solution:* Strict environment scoping to ensure clean function environments.
+
+*(Speaker Note: Keep it brief. 45 seconds.)*
 
 ---
 
-## 6. Outcomes
-- Successfully built all planned features.
-- Achieved "Stretch Goal" of checking names before running.
-- Made a strong test suite for recursion, lists, and tricky cases.
+## 6. Live Demo
+**Let's see it run!**
+- Recursion (`recursion_test.lp`)
+- List Operations (`list_ops.lp`)
+- Error Cases (`error_cases.lp`)
 
----
-
-## 7. Demo
-*Run:* `runghc -iFinal Final/Main.hs Final/demo.lp`
+*(Speaker Note: Switch to terminal. 1 minute for demo. Leave remaining 2 minutes for open Q&A.)*
