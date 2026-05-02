@@ -1,3 +1,5 @@
+module AST where
+
 {-
   Module: AST
   Description: Defines the Abstract Syntax Tree and Value types for the language.
@@ -6,8 +8,6 @@
     - Closures (FunVal) are used to implement first-class functions, allowing for sound lexical scoping.
     - Patterns are separate from Expressions to simplify the match logic.
 -}
-
-module AST where
 
 -- Binary operators supported by the language
 data Binop = Plus | Minus | Times | Divide | Eq | Lt | Gt | Le | Ge | And | Or

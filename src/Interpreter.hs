@@ -1,3 +1,5 @@
+module Interpreter (runProgram, staticCheck, Value(..)) where
+
 {-
   Module: Interpreter
   Description: Evaluates the AST to produce values.
@@ -7,8 +9,6 @@
     - Pattern matching is exhaustive-checked at runtime (simple version).
     - Error handling is centralized via the Either monad.
 -}
-
-module Interpreter (runProgram, staticCheck, Value(..)) where
 
 import AST
 import qualified Data.Map as Map

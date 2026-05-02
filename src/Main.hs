@@ -1,3 +1,5 @@
+module Main where
+
 {-
   Module: Main
   Description: Entry point for the language interpreter.
@@ -6,8 +8,6 @@
     - Includes detailed error reporting for both parsing and runtime errors.
     - Demonstrates the final state of the environment for debugging/inspection.
 -}
-
-module Main where
 
 import System.Environment
 import System.IO

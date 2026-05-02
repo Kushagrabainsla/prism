@@ -1,3 +1,5 @@
+module Parser (parseProgram, parseFile) where
+
 {-
   Module: Parser
   Description: Parsec-based parser for the language.
@@ -6,8 +8,6 @@
     - Implements a recursive descent approach for expressions.
     - Handles whitespace and comments gracefully.
 -}
-
-module Parser (parseProgram, parseFile) where
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
