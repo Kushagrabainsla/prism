@@ -205,4 +205,42 @@ This will:
 3. Perform list filtering with `filter_even`, showing how pattern matching (`h:t`) deconstructs lists declaratively without loops.
 4. Print the final result and the state of the environment for inspection, illustrating mutable state and variable bindings.
 
-**Reasoning for Demo Design:** The demo is concise yet comprehensive, covering all core features in ~10 lines. It emphasizes "Declarative Deconstruction" by avoiding imperative loops. The environment output aids debugging and shows scoping. Running from `src/` leverages Haskell's module system for clean imports. For extended demos, refer to `test/` files like `data_deconstruction.lp` (ETL pipeline) or `recursion_test.lp` (math functions).
+## 8. Internal Execution Model
+
+This section summarizes how Prism's interpreter executes code internally, based on its monadic design. It covers mutability, scoping, state threading, error handling, and evaluation.
+
+### 8.1 Mutability and State Management
+- **Variables are Mutable, Values are Immutable**: Prism allows variable reassignment (e.g., `x = 5; x = 10;`), but the underlying values (ints, lists, etc.) are immutable. Mutability is simulated via Haskell's `State` monad, which threads an immutable `variables` map through execution.
+- **How It Works**: Assignments update the map by creating a new immutable map (e.g., `Map.insert "x" newVal oldMap`). The `State` monad passes this new map to subsequent operations, making it feel like in-place mutation.
+- **Haskell Basis**: `Data.Map` is immutable; updates return new maps. The monad hides this, ensuring purity while allowing imperative-style code.
+
+### 8.2 Scoping
+- **Global Scope**: The persistent `variables` map for top-level variables. Assignments here last until program end.
+- **Local Scope (Functions)**: Function calls create a temporary local map by merging parameters with the global map. Local mutations update this map but are discarded on return, restoring the global state. This prevents side effects and enables recursion.
+- **Implementation**: Save global map, execute with local map, restore global. No nested blocks—only function-level scoping.
+
+### 8.3 State Threading with the State Monad
+- **State Monad Overview**: A monad that threads state through pure functions. Computations take an initial state and return `(result, new_state)`. Operations like `get` (read state), `put` (set state), and `modify` (update state) enable "mutation" without side effects.
+- **In Prism**: The state is `InterpreterState` (variables and functions maps). Each `eval` call can modify the state, and the monad chains them: updated state flows to the next evaluation.
+- **Threading Mechanism**: For sequences (e.g., `x=5; y=2;`), each assignment creates a new map and threads it. Functions do the same locally. This simulates imperative execution in a functional context.
+
+### 8.4 Error Handling
+- **ExceptT Monad**: Wraps computations to handle errors gracefully. Instead of crashing, errors (e.g., "Unbound variable", "Division by zero") short-circuit execution and return descriptive messages.
+- **Integration**: Combined with `State` as `ExceptT String (State InterpreterState) a`. Errors don't corrupt state; execution stops cleanly.
+- **Benefits**: Safe for experimentation; no host Haskell crashes. Errors are caught at runtime with type checks and bounds validation.
+
+### 8.5 Evaluation Process
+- **Eval Function**: Recursively evaluates AST nodes. Each case (e.g., `AssignExpr`, `CallExpr`) handles its logic, potentially updating state.
+- **Key Rules**:
+  - Literals/values: Return directly.
+  - Variables: Lookup in current map, error if unbound.
+  - Operations: Eval operands, apply `evalOp` (with type checks).
+  - Conditionals: Eval condition (must be BoolVal), branch accordingly.
+  - Sequencing: Eval left, then right, threading state.
+  - Assignments: Eval expression, update map, return value.
+  - Function Calls: Eval args, create local scope, eval body, restore global.
+  - Lists/Cons: Build immutable structures.
+  - Pattern Matching: Eval target, try patterns, bind variables in local scope.
+- **Execution Flow**: Programs run via `runProgram`, which initializes state, evaluates the main expression, and returns the result plus final state.
+
+This model ensures Prism is efficient, safe, and bridges functional and imperative paradigms.
