@@ -9,71 +9,60 @@
 **Goal:** Make breaking down complex data structures effortless.
 - **Problem:** Imperative data extraction is verbose and error-prone (e.g., loops with indices in Python lead to off-by-one bugs).
 - **Solution:** A hybrid PL combining tiny imperative core with powerful functional features.
-- **Use Cases:** Rule engines, symbolic math, and configuration logic.
+- **Prism Metaphor:** Just as a prism breaks light into colors, Prism uses pattern matching to break complex data into basic parts.
+- **Deeper Reasoning:** Imperative languages force thinking about *how* to traverse data; functional languages offer pattern matching but require advanced concepts. Prism bridges this gap.
+- **Use Cases:** Rule engines, symbolic math, data transformation, and configuration logic.
 
-*(Speaker Script: "Hi everyone, today we're presenting Prism, our custom programming language designed for 'Declarative Deconstruction'—making data processing simple and safe. Imagine writing code to filter a list: in Python, you'd loop with indices, risking bugs like off-by-one errors. Prism lets you declaratively break data apart using pattern matching, reducing code by up to 70%. We built this hybrid language—imperative for familiarity, functional for safety—to tackle real-world tasks like rule engines for business logic or symbolic math in compilers. This isn't just another interpreter; it's a fresh take on PL design for data-heavy apps." [Pause for emphasis, show a quick slide with buggy code vs. Prism.])* 
-
----
-
-## 2. Interesting PL Ideas (45 seconds)
-- **Recursive Lists & `cons`:** First-class support for `[]` and `h:t` (efficient $O(1)$ cons).
-- **Deep Pattern Matching:** The `match` expression drives the language—binds variables recursively, enabling declarative data breakdown.
-- **Lexical Scoping:** Variables stay safe inside recursive function calls (prevents global pollution).
-- **Static Analysis:** (Stretch Goal) Catches missing variables before execution.
-
-*(Speaker Script: "What makes Prism interesting? First, recursive lists with cons—`h:t` splits a list instantly, O(1) time, no loops needed. Second, deep pattern matching: our `match` isn't just a switch; it's an expression that binds variables recursively, letting you deconstruct data anywhere. For example, `match list with | h:t -> h + sum(t)` pulls apart and processes in one go. Third, lexical scoping keeps functions clean—no global leaks. And we added static analysis to catch errors early, like unbound variables. These ideas blend imperative ease with functional power, setting Prism apart from basic languages." [Use a visual diagram of list splitting. Speak clearly, avoid rushing.])* 
+*(Speaker Script: "Hi everyone, today we're presenting Prism, our custom programming language designed for 'Declarative Deconstruction'—making data processing simple and safe. Imagine writing code to filter a list: in Python, you'd loop with indices, risking bugs like off-by-one errors. Prism lets you declaratively break data apart using pattern matching, reducing code by up to 70%. We built this hybrid language—imperative for familiarity, functional for safety—to tackle real-world tasks like rule engines for business logic or symbolic math in compilers. The name Prism reflects how it breaks down data, just like a prism splits light. This isn't just another interpreter; it's a fresh take on PL design for data-heavy apps." [Pause for emphasis, show a quick slide with buggy code vs. Prism.])* 
 
 ---
 
-## 3. Prism in Action (Example) (1 minute)
-```haskell
-// Advanced Pattern Matching & Recursion
-fun filter_even(xs) =
-  match xs with
-  | [] -> []
-  | h:t -> 
-      if (h / 2) * 2 == h 
-      then h : filter_even(t) 
-      else filter_even(t)
+## 2. Under the Hood: Implementation & Interesting PL Ideas (2 minutes)
+- **Interesting PL Ideas Integrated:**
+  - **Deep Pattern Matching:** The `match` expression drives the language—binds variables recursively, enabling declarative data breakdown. First-class: `match` as an expression, not just in functions.
+  - **Lexical Scoping:** Variables stay safe inside recursive function calls (prevents global pollution).
+  - **Static Analysis:** Catches missing variables before execution.
+- **Execution Model:** Uses State and ExceptT monads for safe, composable evaluation—State tracks variables, ExceptT handles errors without crashes.
+- **Function Calls:** Create isolated scopes by unioning locals with globals; mutations inside don't affect globals.
+- **How Match Works:** Tries patterns in order, binds variables on match, evaluates corresponding expression.
+- **Clean Design:** Strongly separated AST, Parser, Interpreter for modularity. Follows Clean Code principles: meaningful names, small functions, single responsibility.
 
-my_list = [1, 2, 3, 4, 5, 6];
-evens = filter_even(my_list);  // Result: [2, 4, 6]
-```
-*(Speaker Script: "Let's see Prism in action. This function filters even numbers from a list. Look at the `match`: it checks if the list is empty `[]`, or splits into head `h` and tail `t`. If `h` is even, add it to the filtered tail; else, skip. No indices, no loops—just declare what to do. In imperative code, you'd write a for-loop with counters. Prism's way is concise and bug-free. Running this on [1,2,3,4,5,6] gives [2,4,6]. This showcases functions, lists, and pattern matching all together." [Highlight code on slide, explain line-by-line slowly. Show result visually.])* 
+*(Speaker Script: "Now, let's dive under the hood—how we built Prism and what makes its ideas interesting. Prism's core ideas include deep pattern matching that's first-class and expression-based for flexible deconstruction, lexical scoping to avoid global pollution, and static analysis for early error catching. The execution model uses Haskell's State and ExceptT monads: State manages variables safely, ExceptT ensures errors like 'unbound variable' don't crash the program. When a function is called, we create an isolated scope by unioning local params with global vars—mutations inside stay local. Match works by trying patterns sequentially: on match, it binds vars and runs the expression. This clean design with separated AST, Parser, Interpreter follows Clean Code for maintainability. These ideas blend imperative ease with functional safety." [Show diagrams of monads, scoping, pattern matching flow. Speak with enthusiasm, weave ideas into implementation explanation.])* 
 
----
+### Slide Visual for Execution Model:
+- **Top: Journey Diagram**  
+  Source Code → Parser (Parsec) → AST → Interpreter (Monads) → Output Value  
+  *(Flowchart with arrows and icons.)*
+- **Section 1: State Monad**  
+  - **Purpose**: Manages variable state (e.g., assignments) across evaluations.  
+  - **How**: Threads immutable maps through computations, simulating mutation safely.  
+  *(Speaker Note: "State tracks variables like a safe 'mutable' environment—each assignment creates a new map, but the monad handles the flow.")*
+- **Section 2: ExceptT Monad**  
+  - **Purpose**: Handles errors (e.g., unbound vars, type mismatches) gracefully.  
+  - **How**: Short-circuits on errors, returning messages instead of crashing.  
+  *(Speaker Note: "ExceptT wraps evaluations to catch issues early, ensuring robust execution without halting the host Haskell program.")*
 
-## 4. Under the Hood (Implementation) (1 minute)
-- **Frontend:** Built with **Parsec** (Parser Combinators) for robust, recursive parsing.
-- **Backend:** 
-  - **State Monad:** Manages environment (variable bindings) safely.
-  - **ExceptT Monad:** Graceful error handling (e.g., "unbound variable" without crashes).
-- **Clean Design:** Strongly separated AST, Parser, Interpreter for modularity.
-
-*(Speaker Script: "How did we build this? The frontend uses Parsec, a Haskell library for parsing, to handle Prism's recursive syntax reliably. The backend leverages Haskell's monads: State for tracking variables safely, and ExceptT for errors—like catching 'unbound variable' gracefully instead of crashing. We kept it modular: AST for structure, Parser for syntax, Interpreter for logic. This clean design made development smooth and shows real PL implementation chops. Monads here aren't just academic; they enable composable, safe code for a language like Prism." [Show a simple architecture diagram. Speak with enthusiasm to engage tech-savvy audience.])* 
-
----
-
-## 5. Successes & Challenges (45 seconds)
-**Successes:** 
-- Graceful runtime errors (no crashes).
-- Achieved stretch goal (static analysis).
-
-**Challenge & Solution:** 
-- *Challenge:* Infinite recursion risks.
-- *Solution:* Strict scoping + depth checks.
-
-*(Speaker Script: "We succeeded in making Prism robust—errors like division by zero are handled nicely, no crashes. We even hit our stretch goal with basic static analysis. The big challenge was recursion: infinite loops could hang the interpreter. We solved it with strict lexical scoping and added depth checks to prevent runaway calls. This taught us that safety is key in PL design. Overall, Prism works as intended and pushes PL boundaries." [Keep upbeat, smile. Tie to audience interest in reliable systems.])* 
+### Introducing Prism Language Features (After Problem Statement):
+- **Scoping**  
+  - **Single-Line Point**: Lexical scoping keeps variables safe in recursive calls, preventing global pollution.  
+  *(Speaker Note: "Unlike dynamic scoping, lexical scoping ensures functions see only their locals and globals, avoiding name conflicts in recursion.")*
+- **Mutability**  
+  - **Single-Line Point**: Controlled mutations via assignments, with immutable data under the hood for safety.  
+  *(Speaker Note: "Assignments change state, but Haskell's immutability means each update creates a new map, blending imperative feel with functional safety.")*
+- **Pattern Matching**  
+  - **Single-Line Point**: First-class `match` expressions bind variables recursively for declarative data breakdown.  
+  *(Speaker Note: "Match isn't just for functions—it's an expression that destructures data anywhere, like splitting lists with h:t for clean, bug-free processing.")*
 
 ---
 
-## 6. Live Demo (1 minute)
+## 3. Prism in Action (Live Demo) (1 minute)
 **Let's see it run!**
 - Recursion: Factorial & Fibonacci.
 - List Ops: Reverse & map.
 - Data Pipeline: ETL-style filtering.
+- Example: Filter evens from [1,2,3,4,5,6] → [2,4,6].
 
-*(Speaker Script: "Time for proof—let's demo Prism live. First, recursion: factorial of 10 is 3,628,800. Fibonacci too. Next, list operations: reversing [1,2,3] gives [3,2,1]. Finally, our data pipeline filters credits from transactions. Prism handles it all smoothly. Questions? What do you think makes Prism unique?" [Run terminal commands clearly. End with Q&A to fit time.])* 
+*(Speaker Script: "Time for proof—let's demo Prism live. First, recursion: factorial of 10 is 3,628,800. Fibonacci too. Next, list operations: reversing [1,2,3] gives [3,2,1]. Finally, our data pipeline filters credits from transactions. As an example, filtering evens from [1,2,3,4,5,6] gives [2,4,6]. Prism handles it all smoothly. Questions? What do you think makes Prism unique?" [Run terminal commands clearly. Show code snippets and results. End with Q&A to fit time.])* 
 
 ---
 
