@@ -51,14 +51,146 @@ The main reason for Prism is to provide a tool for **"Declarative Deconstruction
 
 **Overall Application:** Following Clean Code made the codebase maintainable for a 3-person team. For example, adding a new operator required changes in only `AST.hs` and `Interpreter.hs`, not scattered across files. This principle guided our Haskell implementation, ensuring idiomatic code.
 
-## 4. How to Demo
+## 4. Language Syntax and Semantics
+
+### 4.1 Syntax Overview
+Prism programs consist of function definitions followed by a main expression. The syntax is designed to be readable and concise.
+
+- **Literals:** Integers (`42`), booleans (`true`, `false`), lists (`[1, 2, 3]`), empty list (`[]`).
+- **Operators:** Binary ops (`+`, `-`, `*`, `/`, `==`, `<`, `>`, `<=`, `>=`, `&&`, `||`), cons (`:`), assignment (`=`), sequencing (`;`).
+- **Expressions:** Variables, operations, conditionals (`if then else`), function calls, pattern matching (`match with | ->`), lists, cons.
+- **Patterns:** Variables, literals, empty list (`[]`), cons (`h:t`), wildcard (`_`).
+
+### 4.2 Semantics
+- **Evaluation:** Strict evaluation (eager), left-to-right.
+- **Types:** Dynamic typing with runtime checks.
+- **Scoping:** Lexical scoping for functions, dynamic for global variables.
+- **Lists:** Immutable, recursive structure.
+- **Functions:** First-class, support recursion.
+
+## 5. Abstract Syntax Tree (AST)
+
+The AST is defined in `AST.hs` and represents the structure of parsed programs.
+
+### 5.1 Data Types
+
+- **Binop:** Binary operators (`Plus`, `Minus`, `Times`, `Divide`, `Eq`, `Lt`, `Gt`, `Le`, `Ge`, `And`, `Or`).
+- **Pattern:** 
+  - `PVar String`: Variable binding.
+  - `PInt Int`: Integer literal.
+  - `PBool Bool`: Boolean literal.
+  - `PListNil`: Empty list.
+  - `PCons String String`: Cons pattern (head:tail).
+  - `PWildcard`: Match anything.
+- **Expr:**
+  - `ValExpr Value`: Literals.
+  - `VarExpr String`: Variables.
+  - `OpExpr Binop Expr Expr`: Binary ops.
+  - `IfExpr Expr Expr Expr`: Conditionals.
+  - `SeqExpr Expr Expr`: Sequencing.
+  - `AssignExpr String Expr`: Assignment.
+  - `CallExpr String [Expr]`: Function calls.
+  - `MatchExpr Expr [(Pattern, Expr)]`: Pattern matching.
+  - `ListExpr [Expr]`: List literals.
+  - `ConsExpr Expr Expr`: Cons operation.
+- **Value:**
+  - `IntVal Int`: Integers.
+  - `BoolVal Bool`: Booleans.
+  - `ListVal [Value]`: Lists.
+  - `FunVal [String] Expr`: Functions (closures).
+  - `NilVal`: Unit/empty.
+- **Definition:** `FunDef String [String] Expr` for function definitions.
+- **Program:** `Program [Definition] Expr` for full programs.
+
+### 5.2 Design Rationale
+Values include recursive lists for core functionality. Patterns are separate for modularity. Expressions cover all language constructs.
+
+## 6. Parser Implementation
+
+The parser uses Parsec for recursive descent parsing.
+
+### 6.1 Lexer
+- **LanguageDef:** Defines comments (`//`, `/* */`), identifiers, reserved words (`fun`, `match`, etc.), operators.
+- **Tokens:** Identifiers, integers, parentheses, brackets, etc.
+
+### 6.2 Grammar
+- **Program:** `functionDef* expression EOF`
+- **FunctionDef:** `fun identifier (identifier*) = expression`
+- **Expression:** Sequence > Assignment > Match > If > OpExpr
+- **MatchExpr:** `match expression with (| pattern -> expression)+`
+- **Pattern:** `identifier : identifier` (cons), `[]`, `_`, literals, variables.
+- **OpExpr:** Uses precedence table (cons right-assoc, mul/div left, add/sub left, comparisons none, logical left).
+- **Term:** Parenthesized, calls, lists, literals, variables.
+
+### 6.3 Parsing Process
+1. Tokenize input.
+2. Parse definitions into function map.
+3. Parse main expression.
+4. Build AST.
+
+### 6.4 Error Handling
+Parsec provides detailed parse errors with position and expected tokens.
+
+## 7. Interpreter Internals
+
+The interpreter uses a monadic approach with `ExceptT` for errors and `State` for environment.
+
+### 7.1 State
+- **InterpreterState:** `variables` (Env), `functions` (FunctionEnv).
+- **Env:** `Map String Value`.
+- **FunctionEnv:** `Map String ([String], Expr)`.
+
+### 7.2 Evaluation Monad
+- **Eval a:** `ExceptT String (State InterpreterState) a`
+- Handles errors and state changes.
+
+### 7.3 Evaluation Rules
+- **ValExpr:** Return value.
+- **VarExpr:** Lookup in env, error if unbound.
+- **OpExpr:** Eval operands, apply `evalOp`.
+- **IfExpr:** Eval condition (must be BoolVal), eval branch.
+- **SeqExpr:** Eval left, then right.
+- **AssignExpr:** Eval expr, insert into variables, return value.
+- **CallExpr:** Eval args, lookup function, create local env with params, eval body, restore env.
+- **ListExpr:** Eval elements to ListVal.
+- **ConsExpr:** Eval head and tail, cons if tail is list.
+- **MatchExpr:** Eval target, try patterns in order, bind variables, eval expr.
+
+### 7.4 Pattern Matching
+- **matchPattern:** Returns `Maybe [(String, Value)]` bindings.
+- Supports variables, literals, empty list, cons (binds head and tail), wildcard.
+- Fails if no pattern matches.
+
+### 7.5 Operator Evaluation
+- **evalOp:** Type-checks operands, performs operation, errors on type mismatch or division by zero.
+
+### 7.6 Function Calls
+- Lexical scoping: Local env for params, access to globals.
+- Recursion supported via env restoration.
+
+### 7.7 Error Types
+- Unbound variable.
+- Undefined function.
+- Wrong argument count.
+- Type errors in ops.
+- Division by zero.
+- Non-boolean condition.
+- Non-list in cons.
+- No pattern match.
+
+## 8. Static Analysis
+- **staticCheck:** Checks for unbound variables before execution.
+- Traverses AST, tracks bound variables.
+- Errors on unbound vars in expressions.
+
+## 9. How to Demo
 To run the project, ensure you have `ghc` installed. Run the following command from the project root:
 
 ```bash
 cd src && runghc Main.hs ../test/demo.lp
 ```
 
-## 5. References
+## 10. References
 Following the project requirements for professional citations:
 
 1.  **Leijen, Daan.** (2001). *Parsec: Direct Style Monadic Parser Combinators for the Real World*. Department of Computer Science, Utrecht University. Accessed April 26, 2026.
